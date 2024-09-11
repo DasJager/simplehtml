@@ -109,6 +109,7 @@
         
         // API keys (you should set these securely before using the app)
         const openaiApiKey = "";
+        const openaiOrgId = "";
         const huggingfaceApiKey = "";
         // Add this at the top of your script
 const lastRequestTime = {
@@ -132,7 +133,7 @@ const lastRequestTime = {
         // Function to use OpenAI's ChatGPT API
         function useOpenAiApi(message, retries = 3, delay = 2000) {
     const currentTime = Date.now();
-    if (currentTime - lastRequestTime.openai < 1000) { // 1 second cooldown
+    if (currentTime - lastRequestTime.openai < 1000) {
         displayMessage("System", "Please wait a moment before sending another message.");
         return;
     }
@@ -141,7 +142,7 @@ const lastRequestTime = {
     const apiUrl = "https://api.openai.com/v1/chat/completions";
 
     const payload = {
-        model: "gpt-4o-mini",
+        model: "gpt-3.5-turbo",
         messages: [{ role: "user", content: message }],
         max_tokens: 150
     };
@@ -149,12 +150,19 @@ const lastRequestTime = {
     console.log("Payload being sent:", JSON.stringify(payload));
     console.log("Payload length:", JSON.stringify(payload).length);
 
+    const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${openaiApiKey}`,
+    };
+
+    // Add Organization ID to headers if it's set
+    if (openaiOrgId) {
+        headers["OpenAI-Organization"] = openaiOrgId;
+    }
+
     fetch(apiUrl, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${openaiApiKey}`,
-        },
+        headers: headers,
         body: JSON.stringify(payload),
     })
     .then(response => {
@@ -179,7 +187,7 @@ const lastRequestTime = {
     .catch(error => {
         console.error("OpenAI API Error:", error);
         if (error.message.includes("Rate limit") && retries > 0) {
-            const retryAfter = 10; // Default to 10 seconds if no header is provided
+            const retryAfter = 10;
             displayMessage("System", `Rate limit reached. Retrying in ${retryAfter} seconds...`);
             setTimeout(() => {
                 useOpenAiApi(message, retries - 1, delay * 2);
@@ -195,11 +203,17 @@ const lastRequestTime = {
 function validateApiKey() {
     const apiUrl = "https://api.openai.com/v1/models";
 
+    const headers = {
+        "Authorization": `Bearer ${openaiApiKey}`,
+    };
+
+    if (openaiOrgId) {
+        headers["OpenAI-Organization"] = openaiOrgId;
+    }
+
     fetch(apiUrl, {
         method: "GET",
-        headers: {
-            Authorization: `Bearer ${openaiApiKey}`,
-        },
+        headers: headers,
     })
     .then(response => {
         if (!response.ok) {
