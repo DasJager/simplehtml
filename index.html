@@ -142,7 +142,7 @@ const lastRequestTime = {
     const apiUrl = "https://api.openai.com/v1/chat/completions";
 
     const payload = {
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o", // you can use the following models 'gpt-4o-mini' 'gpt-4o' 'gpt-3.5-turbo'
         messages: [{ role: "user", content: message }],
         max_tokens: 150
     };
